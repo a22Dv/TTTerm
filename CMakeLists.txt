@@ -5,3 +5,4 @@ set(FILES
 )
 add_executable(ttterm ${FILES})
 target_compile_features(ttterm PRIVATE cxx_std_20)
+target_include_directories(ttterm PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
