@@ -1,1 +1,3 @@
-# Termichess
+# Tic-Tac-Term
+
+A terminal 

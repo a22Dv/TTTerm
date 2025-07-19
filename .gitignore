@@ -1,3 +1,4 @@
-./vscode
-./build
-./assets
+.vscode/
+build/
+assets/
+termichess.bat
