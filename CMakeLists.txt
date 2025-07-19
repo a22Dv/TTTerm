@@ -3,5 +3,5 @@ project(termichess CXX)
 set(FILES
     src/main.cpp
 )
-add_executable(termichess ${FILES})
-target_compile_features(termichess PRIVATE cxx_std_20)
+add_executable(ttterm ${FILES})
+target_compile_features(ttterm PRIVATE cxx_std_20)

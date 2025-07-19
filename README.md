@@ -1,3 +1,3 @@
 # Tic-Tac-Term
 
-A terminal 
+A full-fledged terminal tic-tac-toe player.
