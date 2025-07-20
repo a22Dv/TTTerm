@@ -1,9 +1,10 @@
 #pragma once
 #include <atomic>
 #include <thread>
+
 #include "tt_assets.hpp"
 
-namespace TicTacToe {
+namespace ttt {
 
 class Display {
    private:
@@ -22,8 +23,8 @@ class Audio {
    public:
     Audio();
     void exec_athread();
-    void play_file(const AudioFile aFile);
-    void stop_file(const AudioFile aFile);
+    void play_file(const AssetFile aFile);
+    void stop_file(const AssetFile aFile);
     void start();
     void stop();
     ~Audio();
@@ -43,5 +44,4 @@ class Application {
     ~Application();
 };
 
-} // namespace TicTacToe
-
+} // namespace ttt
