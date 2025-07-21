@@ -276,19 +276,19 @@ static void cleanupSoundInstances(std::array<SoundInstance, tct::concurrentAud>&
 
 using DispatchAudioArray = std::array<
     std::function<void(ma_engine& engine, std::array<SoundInstance, tct::concurrentAud>&, const tct::AudioRequest)>,
-    static_cast<size_t>(tct::AudioRequestType::COUNT)>;
+    static_cast<std::size_t>(tct::AudioRequestType::COUNT)>;
 
 void tct::Audio::audThreadExec() {
     std::array<SoundInstance, tct::concurrentAud> sounds{};
     std::array<tct::AudioRequest, tct::audReqBufSz> requests{};
-    size_t cRequests = 0;
+    std::size_t cRequests = 0;
     DispatchAudioArray dispatch{};
 
-    dispatch[static_cast<size_t>(tct::AudioRequestType::PLAY)] = playMaSound;
-    dispatch[static_cast<size_t>(tct::AudioRequestType::SET_VOLUME)] = setVolMaSound;
-    dispatch[static_cast<size_t>(tct::AudioRequestType::STOP)] = stopMaSound;
-    dispatch[static_cast<size_t>(tct::AudioRequestType::FADE_IN)] = startFadeInMaSound;
-    dispatch[static_cast<size_t>(tct::AudioRequestType::FADE_OUT)] = startFadeOutMaSound;
+    dispatch[static_cast<std::size_t>(tct::AudioRequestType::PLAY)] = playMaSound;
+    dispatch[static_cast<std::size_t>(tct::AudioRequestType::SET_VOLUME)] = setVolMaSound;
+    dispatch[static_cast<std::size_t>(tct::AudioRequestType::STOP)] = stopMaSound;
+    dispatch[static_cast<std::size_t>(tct::AudioRequestType::FADE_IN)] = startFadeInMaSound;
+    dispatch[static_cast<std::size_t>(tct::AudioRequestType::FADE_OUT)] = startFadeOutMaSound;
     std::chrono::steady_clock::time_point cTime{std::chrono::steady_clock::now()};
     while (true) {
         {
@@ -307,8 +307,8 @@ void tct::Audio::audThreadExec() {
         cTime = nTime;
         updateFades(sounds, delta);
         cleanupSoundInstances(sounds, false);
-        for (size_t req = 0; req < cRequests; ++req) {
-            dispatch[static_cast<size_t>(requests[req].reqType)](engine, sounds, requests[req]);
+        for (std::size_t req = 0; req < cRequests; ++req) {
+            dispatch[static_cast<std::size_t>(requests[req].reqType)](engine, sounds, requests[req]);
         }
         cRequests = 0;
     }

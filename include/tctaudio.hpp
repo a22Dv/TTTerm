@@ -5,7 +5,6 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
-#include <filesystem>
 #include <mutex>
 #include <thread>
 
@@ -21,7 +20,6 @@ extern "C" {
 #endif
 
 namespace tct {
-namespace fs = std::filesystem;
 
 /// @brief  Audio file type.
 /// @note DO NOT USE NULL_TYPE. Use NONE to ignore choices.
@@ -38,15 +36,15 @@ enum class AudioFileID {
 };
 enum class AudioRequestType { STOP, PLAY, SET_VOLUME, FADE_IN, FADE_OUT, COUNT };
 
-constexpr const size_t audReqBufSz = 5;
-constexpr const size_t concurrentAud = 10;
+constexpr const std::size_t audReqBufSz = 5;
+constexpr const std::size_t concurrentAud = 10;
 constexpr const char* getPathAudioId(const AudioFileID fileId) {
     constexpr const char* paths[] = {
 #define X(id, pth) pth,
         AUDIO_FILES
 #undef X
     };
-    return paths[static_cast<size_t>(fileId)];
+    return paths[static_cast<std::size_t>(fileId)];
 }
 
 struct AudioRequest {
@@ -64,8 +62,8 @@ class Audio {
     std::condition_variable cv{};
     std::atomic<bool> terminate{false};
     std::mutex reqMutex{};
-    size_t reqIdx{};
-    size_t audProcIdx{};
+    std::size_t reqIdx{};
+    std::size_t audProcIdx{};
     std::array<AudioRequest, audReqBufSz> reqRBuf{};
     std::thread audThread{};
     void audThreadExec();
@@ -73,6 +71,13 @@ class Audio {
 
    public:
     Audio();
+
+    // You don't wanna move or copy this thing at all.
+    Audio(Audio&) = delete;
+    Audio(Audio&&) = delete;
+    Audio& operator=(Audio&) = delete;
+    Audio& operator=(Audio&&) = delete;
+
     void playFile(const AudioFileID fileId, const AudioFileType fileType, const float volume = 1.0f,
                   const bool looping = false) noexcept;
     void playFileFadeIn(const AudioFileID fileId, const AudioFileType fileType, const float fadeSeconds = 1.0f,
