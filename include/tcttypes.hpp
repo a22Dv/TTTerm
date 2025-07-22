@@ -1,15 +1,17 @@
 #pragma once
 
+#include <cstddef>
+
 namespace tct {
     
 struct Vector2D {
-    float x;
-    float y;
+    std::size_t x;
+    std::size_t y;
 };
 
 struct Dimensions {
-    size_t x;
-    size_t y;
+    std::size_t x;
+    std::size_t y;
 };
 
 } // namespace tct

@@ -11,7 +11,7 @@
     X(TEST_AUDIO, "C:\\repositories\\tic_tac_term\\assets\\KATSEYE - Gabriel [GYyzaa9_ERg].wav") \
     X(MAIN_MENU, "C:\\repositories\\tic_tac_term\\assets\\Audio\\Title Theme\\xDeviruchi - Title Theme (Loop).wav")
 
-#define IMAGE_FILES X(TEST_IMAGE, "C:\\repositories\\tic_tac_term\\assets\\Images\\donut.raw", 64, 64)
+#define IMAGE_FILES X(TEST_IMAGE, "C:\\repositories\\tic_tac_term\\assets\\Images\\canvas.raw", 128, 96)
 
 namespace tct {
 

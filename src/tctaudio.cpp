@@ -10,7 +10,7 @@
 
 tct::Audio::Audio() {
     ma_result maRet = ma_engine_init(NULL, &engine);
-    tct::check(maRet == MA_SUCCESS, "AUDIO INITIALIZATION FAILURE.");
+    tct::check(maRet == MA_SUCCESS, "Miniaudio failed to initialize.\n");
     audThread = std::thread([this]() { this->audThreadExec(); });
 }
 
@@ -24,6 +24,7 @@ tct::Audio::~Audio() {
 /*
     Helper functions to simplify API and handle request creation.
 */
+
 void tct::Audio::playFile(std::weak_ptr<Asset> asset, const tct::AudioFileType fileType, const float volume,
                           const bool looping) noexcept {
     std::shared_ptr<Asset> lockAsset = asset.lock();
@@ -148,7 +149,7 @@ void tct::Audio::stopTypeFadeOut(const tct::AudioFileType fileType, const float 
                                          .fadeDuration = std::chrono::duration<float>(fadeSeconds)});
 }
 
-enum class FadeType : uint8_t { NONE, FADE_IN, FADE_OUT };
+enum class FadeType : std::uint8_t { NONE, FADE_IN, FADE_OUT };
 
 struct SoundInstance {
     bool soundInitialized{};
@@ -168,7 +169,7 @@ struct SoundInstance {
 static void resetSound(SoundInstance& sound) {
     if (sound.soundInitialized) {
         ma_result mSndStop = ma_sound_stop(&sound.sound);
-        tct::check(mSndStop == MA_SUCCESS, "Error stopping sound.");
+        tct::check(mSndStop == MA_SUCCESS, "Error stopping sound.\n");
         ma_sound_uninit(&sound.sound);
     }
     if (sound.decoderInitialized) {
@@ -185,6 +186,7 @@ static void resetSound(SoundInstance& sound) {
     sound.soundInitialized = false;
     sound.decoderInitialized = false;
 }
+
 /*
     For these functions while you could technically give a "valid indices" array to avoid
     looping for at most 10 times to look for a suitable spot, that operation is fast enough
@@ -198,7 +200,7 @@ static void playMaSound(ma_engine& engine, std::array<SoundInstance, tct::concur
             continue;
         }
         sound.asset = req.asset.lock();
-        tct::check(sound.asset != nullptr, "Resource deleted before acquisition.");
+        tct::check(sound.asset != nullptr, "Resource deleted before acquisition.\n");
 
         sound.active = true;
         sound.fileType = req.type;
@@ -209,15 +211,15 @@ static void playMaSound(ma_engine& engine, std::array<SoundInstance, tct::concur
         sound.fRate = 0.0f;
         ma_result mDec = ma_decoder_init_memory(reinterpret_cast<void*>(sound.asset->data.data()),
                                                 sound.asset->data.size(), nullptr, &sound.decoder);
-        tct::check(mDec == MA_SUCCESS, "Error initializing decoder.");
+        tct::check(mDec == MA_SUCCESS, "Error initializing decoder.\n");
         sound.decoderInitialized = true;
         ma_result mSnd = ma_sound_init_from_data_source(&engine, &sound.decoder, 0, nullptr, &sound.sound);
-        tct::check(mSnd == MA_SUCCESS, "Error initializing sound.");
+        tct::check(mSnd == MA_SUCCESS, "Error initializing sound.\n");
         sound.soundInitialized = true;
         ma_sound_set_volume(&sound.sound, req.volume);
         ma_sound_set_looping(&sound.sound, req.loop);
         ma_result mSndStart = ma_sound_start(&sound.sound);
-        tct::check(mSndStart == MA_SUCCESS, "Error playing sound.");
+        tct::check(mSndStart == MA_SUCCESS, "Error playing sound.\n");
         break;
     }
 }
@@ -225,7 +227,7 @@ static void playMaSound(ma_engine& engine, std::array<SoundInstance, tct::concur
 static void stopMaSound(ma_engine& engine, std::array<SoundInstance, tct::concurrentAud>& sounds,
                         const tct::AudioRequest req) {
     std::shared_ptr<tct::Asset> lockAsset = req.asset.lock();
-    tct::check(lockAsset != nullptr, "Resource deleted before acquisition.");
+    tct::check(lockAsset != nullptr, "Resource deleted before acquisition.\n");
 
     for (SoundInstance& sound : sounds) {
         if (!sound.active) {
@@ -242,7 +244,7 @@ static void stopMaSound(ma_engine& engine, std::array<SoundInstance, tct::concur
 static void setVolMaSound(ma_engine& engine, std::array<SoundInstance, tct::concurrentAud>& sounds,
                           const tct::AudioRequest req) {
     std::shared_ptr<tct::Asset> lockAsset = req.asset.lock();
-    tct::check(lockAsset != nullptr, "Resource deleted before acquisition.");
+    tct::check(lockAsset != nullptr, "Resource deleted before acquisition.\n");
     for (SoundInstance& sound : sounds) {
         if (!sound.active) {
             continue;
@@ -262,7 +264,7 @@ static void startFadeInMaSound(ma_engine& engine, std::array<SoundInstance, tct:
             continue;
         }
         sound.asset = req.asset.lock();
-        tct::check(sound.asset != nullptr, "Resource deleted before acquisition.");
+        tct::check(sound.asset != nullptr, "Resource deleted before acquisition.\n");
         sound.active = true;
         sound.fileType = req.type;
         sound.fadeType = FadeType::FADE_IN;
@@ -274,12 +276,12 @@ static void startFadeInMaSound(ma_engine& engine, std::array<SoundInstance, tct:
                                                 sound.asset->data.size(), nullptr, &sound.decoder);
         sound.decoderInitialized = true;
         ma_result mSnd = ma_sound_init_from_data_source(&engine, &sound.decoder, 0, nullptr, &sound.sound);
-        tct::check(mSnd == MA_SUCCESS, "Error initializing sound.");
+        tct::check(mSnd == MA_SUCCESS, "Error initializing sound.\n");
         sound.soundInitialized = true;
         ma_sound_set_volume(&sound.sound, 0.0);
         ma_sound_set_looping(&sound.sound, req.loop);
         ma_result mSndStart = ma_sound_start(&sound.sound);
-        tct::check(mSndStart == MA_SUCCESS, "Error playing sound.");
+        tct::check(mSndStart == MA_SUCCESS, "Error playing sound.\n");
         break;
     }
 }
@@ -287,7 +289,7 @@ static void startFadeInMaSound(ma_engine& engine, std::array<SoundInstance, tct:
 static void startFadeOutMaSound(ma_engine& engine, std::array<SoundInstance, tct::concurrentAud>& sounds,
                                 const tct::AudioRequest req) {
     std::shared_ptr<tct::Asset> lockAsset = req.asset.lock();
-    tct::check(lockAsset != nullptr, "Resource deleted before acquisition.");
+    tct::check(lockAsset != nullptr, "Resource deleted before acquisition.\n");
 
     for (SoundInstance& sound : sounds) {
         if (!sound.active) {
