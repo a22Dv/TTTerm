@@ -5,9 +5,10 @@
 int main() {
     try {
         tct::Audio aud{};
-        aud.playFile(tct::AudioFileID::TEST, tct::AudioFileType::MUSIC);
-        std::this_thread::sleep_for(std::chrono::seconds(100));
-        aud.stopFileFadeOut(tct::AudioFileID::TEST);
+        std::shared_ptr<tct::Asset> testAudio = std::make_shared<tct::Asset>(tct::Asset(tct::AssetID::TEST_AUDIO));
+        aud.playFile(testAudio, tct::AudioFileType::MUSIC);
+        std::this_thread::sleep_for(std::chrono::seconds(150));
+        aud.stopFileFadeOut(testAudio);
         std::this_thread::sleep_for(std::chrono::seconds(1));
         std::cout << "Hello World!\n";
         return 0;

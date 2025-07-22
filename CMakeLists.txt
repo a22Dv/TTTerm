@@ -4,6 +4,7 @@ set(FILES
     src/main.cpp
     src/tctaudio.cpp
     src/tctdisplay.cpp
+    src/tctfiles.cpp
 )
 add_executable(ttterm ${FILES})
 target_compile_features(ttterm PRIVATE cxx_std_20)
