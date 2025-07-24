@@ -1,26 +1,47 @@
 {
-    "version": 8,
+    "version": 3,
     "configurePresets": [
         {
-            "name": "Visual Studio Community 2022 Release - amd64",
-            "displayName": "Visual Studio Community 2022 Release - amd64",
-            "description": "Using compilers for Visual Studio 17 2022 (x64 architecture)",
-            "generator": "Visual Studio 17 2022",
-            "toolset": "host=x64",
-            "architecture": "x64",
-            "binaryDir": "${sourceDir}/build/",
+            "name": "wclang-debug",
+            "displayName": "Windows clang-cl (Debug)",
+            "description": "Builds with clang-cl on Windows in Debug mode.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/debug/",
             "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/build",
-                "CMAKE_CXX_COMPILER": "cl.exe"
+                "CMAKE_C_COMPILER": "clang-cl.exe",
+                "CMAKE_CXX_COMPILER": "clang-cl.exe",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_C_FLAGS": "--target=x86_64-pc-windows-msvc",
+                "CMAKE_CXX_FLAGS": "--target=x86_64-pc-windows-msvc"
+            }
+        },
+        {
+            "name": "wclang-release",
+            "displayName": "Windows clang-cl (Release)",
+            "description": "Builds with clang-cl on Windows in Release mode (optimized).",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/release/",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang-cl.exe",
+                "CMAKE_CXX_COMPILER": "clang-cl.exe",
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_C_FLAGS": "--target=x86_64-pc-windows-msvc",
+                "CMAKE_CXX_FLAGS": "--target=x86_64-pc-windows-msvc"
             }
         }
     ],
     "buildPresets": [
         {
-            "name": "Visual Studio Community 2022 Release - amd64-debug",
-            "displayName": "Visual Studio Community 2022 Release - amd64 - Debug",
-            "configurePreset": "Visual Studio Community 2022 Release - amd64",
-            "configuration": "Debug"
+            "name": "debug-build",
+            "configurePreset": "wclang-debug",
+            "displayName": "Build (Debug)"
+        },
+        {
+            "name": "release-build",
+            "configurePreset": "wclang-release",
+            "displayName": "Build (Release)"
         }
     ]
 }

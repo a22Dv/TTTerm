@@ -1,76 +1,67 @@
 #pragma once
 
-#include <array>
-#include <atomic>
-#include <chrono>
-#include <condition_variable>
-#include <cstddef>
-#include <mutex>
-#include <thread>
-#include <memory>
-
-#include "tctfiles.hpp"
-#include "tctutils.hpp"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include "miniaudio.h"
-#ifdef __cplusplus
-}
-#endif
+#include <array>
+#include <memory>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <condition_variable>
+#include <optional>
+#include <chrono>
 
 namespace tct {
 
-/// @brief  Audio file type.
-enum class AudioFileType { NONE, MUSIC, SFX, DIALOGUE };
-enum class AudioRequestType { STOP, PLAY, SET_VOLUME, FADE_IN, FADE_OUT, COUNT };
+struct Asset;
+enum class AudioType : uint8_t;
+constexpr const std::size_t requestLimit = 5;
+constexpr const std::size_t concurrentAudio = 10;
 
-constexpr const std::size_t audReqBufSz = 5;
-constexpr const std::size_t concurrentAud = 10;
+enum class AudioRequestType : uint8_t {
+    PLAY_FILE,
+    PLAY_FILE_FADE,
+    STOP_FILE,
+    STOP_FILE_FADE,
+    STOP_TYPE,
+    STOP_TYPE_FADE
+};
 
 struct AudioRequest {
-    std::weak_ptr<Asset> asset;
-    AudioRequestType reqType;
-    AudioFileType type;
-    bool loop;
-    float volume;
-    std::chrono::duration<float> fadeDuration;
+    AudioRequestType requestType;
+    std::optional<bool> looping{};
+    std::optional<float> volume{};
+    std::optional<std::chrono::duration<float>> fadeDuration{};
+    std::optional<std::weak_ptr<Asset>> asset{};
+    std::optional<AudioType> aType{};
 };
 
 class Audio {
-   private:
-    ma_engine engine;
-    std::condition_variable cv{};
-    std::atomic<bool> terminate{false};
-    std::mutex reqMutex{};
-    std::size_t reqIdx{};
-    std::size_t audProcIdx{};
-    std::array<AudioRequest, audReqBufSz> reqRBuf;
+  private:
+    std::atomic<bool> terminate{};
+    bool engineInitialized{};
+    ma_engine audioEngine{};
     std::thread audThread{};
+    std::mutex requestMutex{};
+    std::condition_variable threadCv{};
+    std::array<AudioRequest, requestLimit> requests{};
+    std::size_t requestHead{};
+    std::size_t requestTail{};
     void audThreadExec();
-    void sendRequest(const AudioRequest request) noexcept;
-
-   public:
+    void sendRequest(const std::weak_ptr<Asset> audioAsset);
+  public:
     Audio();
-
-    // You don't wanna move or copy this thing at all.
-    Audio(Audio&) = delete;
-    Audio(Audio&&) = delete;
-    Audio& operator=(Audio&) = delete;
-    Audio& operator=(Audio&&) = delete;
-
-    void playFile(std::weak_ptr<Asset> asset, const AudioFileType fileType, const float volume = 1.0f,
-                  const bool looping = false) noexcept;
-    void playFileFadeIn(std::weak_ptr<Asset> asset, const AudioFileType fileType, const float fadeSeconds = 1.0f,
-                        const float volume = 1.0f, const bool looping = false) noexcept;
-    void setVolumeFile(std::weak_ptr<Asset> asset, const float volume = 1.0f) noexcept;
-    void setVolumeType(const AudioFileType fileType, const float volume = 1.0f) noexcept;
-    void stopFile(std::weak_ptr<Asset> asset) noexcept;
-    void stopFileFadeOut(std::weak_ptr<Asset> asset, const float fadeSeconds = 1.0f) noexcept;
-    void stopType(const AudioFileType fileType) noexcept;
-    void stopTypeFadeOut(const AudioFileType fileType, const float fadeSeconds = 1.0f) noexcept;
     ~Audio();
+    Audio(const Audio &) = delete;
+    Audio &operator=(const Audio &) = delete;
+    Audio(Audio &&) = delete;
+    Audio &operator=(Audio &&) noexcept = delete;
+
+    void playFile(const std::weak_ptr<Asset> audioAsset, const float volume, const bool looping);
+    void playFileFade(const std::weak_ptr<Asset> audioAsset, const float fadeDuration, const float volume, const bool looping);
+    void stopFile(const std::weak_ptr<Asset> audioAsset);
+    void stopFileFade(const std::weak_ptr<Asset> audioAsset, const float fadeDuration);
+    void stopType(const AudioType aType);
+    void stopTypeFade(const AudioType aType, const float fadeDuration);
 };
 
 } // namespace tct

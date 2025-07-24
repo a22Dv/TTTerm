@@ -1,4 +1,5 @@
 .vscode/
 build/
 assets/
-termichess.bat
+include/miniaudio.h
+include/stb_image.h
