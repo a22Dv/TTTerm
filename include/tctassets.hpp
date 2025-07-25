@@ -17,6 +17,7 @@ constexpr const char *audioPaths[]{
     AUDIO_ASSETS
 #undef X
 };
+
 constexpr const char *imagePaths[]{
 #define X(enum, pth) pth,
     IMAGE_ASSETS
@@ -40,6 +41,7 @@ enum class AssetId : std::size_t {
         IMAGE_ASSETS
 #undef X
 };
+
 enum class AudioType : std::uint8_t { MUSIC, SFX };
 
 constexpr const AudioType audioTypes[]{
@@ -51,6 +53,7 @@ constexpr const AudioType audioTypes[]{
 struct AssetMetadata {
     virtual ~AssetMetadata() = default;
 };
+
 struct ImageMetadata : public AssetMetadata {
     std::size_t height{};
     std::size_t width{};
@@ -58,11 +61,13 @@ struct ImageMetadata : public AssetMetadata {
     ~ImageMetadata() = default;
     
 };
+
 struct AudioMetadata : public AssetMetadata {
     AudioType audioType;
     ~AudioMetadata() = default;
     
 };
+
 using AssetMetadataVariant = std::variant<ImageMetadata, AudioMetadata>;
 struct Asset {
     AssetMetadataVariant assetMetadata;
@@ -79,4 +84,5 @@ class AssetRegistry {
   public:
     std::weak_ptr<Asset> getAsset(const AssetId assetId) const;
 };
+
 } // namespace tct

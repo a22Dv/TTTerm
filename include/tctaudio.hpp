@@ -47,7 +47,7 @@ class Audio {
     std::size_t requestHead{};
     std::size_t requestTail{};
     void audThreadExec();
-    void sendRequest(const std::weak_ptr<Asset> audioAsset);
+    void sendRequest(const AudioRequest request);
   public:
     Audio();
     ~Audio();
@@ -55,13 +55,13 @@ class Audio {
     Audio &operator=(const Audio &) = delete;
     Audio(Audio &&) = delete;
     Audio &operator=(Audio &&) noexcept = delete;
-
-    void playFile(const std::weak_ptr<Asset> audioAsset, const float volume, const bool looping);
-    void playFileFade(const std::weak_ptr<Asset> audioAsset, const float fadeDuration, const float volume, const bool looping);
+    
+    void playFile(const std::weak_ptr<Asset> audioAsset, const float volume = 1.0f, const bool looping = false);
+    void playFileFade(const std::weak_ptr<Asset> audioAsset, const float fadeDuration = 1.0f, const float volume = 1.0f, const bool looping = false);
     void stopFile(const std::weak_ptr<Asset> audioAsset);
-    void stopFileFade(const std::weak_ptr<Asset> audioAsset, const float fadeDuration);
+    void stopFileFade(const std::weak_ptr<Asset> audioAsset, const float fadeDuration = 1.0f);
     void stopType(const AudioType aType);
-    void stopTypeFade(const AudioType aType, const float fadeDuration);
+    void stopTypeFade(const AudioType aType, const float fadeDuration = 1.0f);
 };
 
 } // namespace tct

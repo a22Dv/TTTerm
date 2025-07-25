@@ -4,4 +4,4 @@ AlignAfterOpenBracket: BlockIndent
 AllowShortCaseLabelsOnASingleLine: true
 DerivePointerAlignment: false
 PointerAlignment: Right
-ColumnLimit: 100
+ColumnLimit: 120
