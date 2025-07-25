@@ -1,3 +1,63 @@
 #pragma once
+#include "tctaudio.hpp"
+#include "tctdisplay.hpp"
+#include "tctinput.hpp"
+#include <variant>
+namespace tct {
 
-struct TestStruct { int a{10}; };
+class Game;
+
+struct GameContext {};
+
+struct MenuContext {};
+
+using SceneContext = std::variant<GameContext, MenuContext>;
+
+class Scene {
+  public:
+    virtual void init() = 0;
+    virtual void update() = 0;
+    virtual void render() = 0;
+    virtual ~Scene() = default;
+};
+
+class MenuScene : public Scene {
+  private:
+    MenuContext context{};
+    Game &gameInstance;
+
+  public:
+    void init() override;
+    void update() override;
+    void render() override;
+    MenuScene(Game &game) : gameInstance{game} {};
+};
+
+class GameScene : public Scene {
+  private:
+    GameContext context{};
+    Game &gameInstance;
+
+  public:
+    void init() override;
+    void update() override;
+    void render() override;
+    GameScene(Game &game) : gameInstance{game} {};
+};
+
+class Game {
+  private:
+    bool terminate{};
+    Display displayModule{};
+    Audio audioModule{};
+    Input inputModule{};
+    std::vector<std::unique_ptr<Scene>> sceneStack{};
+
+  public:
+    void popScene() { sceneStack.pop_back(); };
+    void pushScene(std::unique_ptr<Scene> scene) { sceneStack.push_back(std::move(scene)); };
+    void quit() { terminate = true; };
+    void run();
+};
+
+} // namespace tct
