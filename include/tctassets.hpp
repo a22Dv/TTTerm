@@ -10,7 +10,7 @@
 #define AUDIO_ASSETS                                                                               \
     X(TEST_MUSIC, MUSIC, "C:/repositories/ttterm/assets/audio/KATSEYE - Gabriel [GYyzaa9_ERg].wav")
 
-#define IMAGE_ASSETS X(TEST_IMAGE, "C:/repositories/ttterm/assets/images/donut.png")
+#define IMAGE_ASSETS X(TEST_IMAGE, "C:/repositories/ttterm/assets/images/ttt_board.png")
 
 constexpr const char *audioPaths[]{
 #define X(enum, type, pth) pth,

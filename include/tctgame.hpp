@@ -1,4 +1,5 @@
 #pragma once
+#include "tctassets.hpp"
 #include "tctaudio.hpp"
 #include "tctdisplay.hpp"
 #include "tctinput.hpp"
@@ -51,9 +52,14 @@ class Game {
     Display displayModule{};
     Audio audioModule{};
     Input inputModule{};
+    AssetRegistry registry{};
     std::vector<std::unique_ptr<Scene>> sceneStack{};
 
   public:
+    Display& getDsp() { return displayModule; };
+    Audio& getAud() { return audioModule; };
+    Input& getInput() { return inputModule; };
+    AssetRegistry& getRegistry() { return registry; };
     void popScene() { sceneStack.pop_back(); };
     void pushScene(std::unique_ptr<Scene> scene) { sceneStack.push_back(std::move(scene)); };
     void quit() { terminate = true; };

@@ -13,8 +13,8 @@
 namespace tct {
 namespace {
 
-// Forces the image to only have a Grayscale and Alpha channel.
-constexpr const int stbGrayAlpha = 2;
+// Forces the image to only have a Grayscale channel.
+constexpr const int stbGray = 1;
 
 void loadAudio(std::shared_ptr<Asset> assetPtr, const std::size_t audioIdx) {
     const std::filesystem::path audioPath = std::filesystem::path{audioPaths[audioIdx]};
@@ -31,14 +31,13 @@ void loadAudio(std::shared_ptr<Asset> assetPtr, const std::size_t audioIdx) {
 void loadImage(std::shared_ptr<Asset> assetPtr, const std::size_t imgIdx) {
     int width{};
     int height{};
-    int channels{};
     const char *imagePath{imagePaths[imgIdx]};
-    std::uint8_t *imgData{static_cast<std::uint8_t *>(stbi_load(imagePath, &width, &height, &channels, stbGrayAlpha))};
+    std::uint8_t *imgData{static_cast<std::uint8_t *>(stbi_load(imagePath, &width, &height, nullptr, stbGray))};
     check(imgData != nullptr, std::format("An error has occured when loading {}.", imagePath));
     ImageMetadata mtdta{};
     mtdta.height = static_cast<std::size_t>(height);
     mtdta.width = static_cast<std::size_t>(width);
-    mtdta.channels = static_cast<std::size_t>(stbGrayAlpha);
+    mtdta.channels = static_cast<std::size_t>(stbGray);
     const std::size_t totalBytes{static_cast<std::size_t>(width * height * mtdta.channels)};
     assetPtr->assetMetadata = mtdta;
     assetPtr->assetData.resize(totalBytes);

@@ -1,7 +1,7 @@
 #include "tctgame.hpp"
+#include "tctdisplay.hpp"
 #include <chrono>
 #include <thread>
-#include <iostream>
 
 namespace tct {
 
@@ -33,28 +33,21 @@ void Game::run() {
     }
 }
 
-void MenuScene::init() {
-    return;
-}
+void MenuScene::init() { return; }
 
-void MenuScene::update() {
-    std::cout << "Hello World from MenuScene.";
-}
+void MenuScene::update() {}
 
 void MenuScene::render() {
-    return;
+    Display &dsp{gameInstance.getDsp()};
+    AssetRegistry &registry{gameInstance.getRegistry()};
+    dsp.render(RenderRequest{registry.getAsset(AssetId::TEST_IMAGE), Vector2{.x = 0, .y = 0}});
+    dsp.present();
 }
 
-void GameScene::init() {
-    return;
-}
+void GameScene::init() { return; }
 
-void GameScene::update() {
-    std::cout << "Hello World from GameScene.";
-}
+void GameScene::update() {}
 
-void GameScene::render() {
-    return;
-}
+void GameScene::render() { return; }
 
 } // namespace tct
