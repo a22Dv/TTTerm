@@ -4,13 +4,24 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
-#include <vector>
 #include <variant>
+#include <vector>
 
-#define AUDIO_ASSETS                                                                               \
-    X(TEST_MUSIC, MUSIC, "C:/repositories/ttterm/assets/audio/KATSEYE - Gabriel [GYyzaa9_ERg].wav")
+#define AUDIO_ASSETS                                                                                                   \
+    X(TEST_MUSIC, MUSIC, "C:/repositories/ttterm/assets/audio/KATSEYE - Gabriel [GYyzaa9_ERg].wav")                    \
+    X(SELECT_MENU, SFX, "C:/repositories/ttterm/assets/audio/select_menu.wav")                                         \
+    X(MENU_BGM, MUSIC, "C:/repositories/ttterm/assets/audio/xDeviruchi - Title Theme (Loop).wav")                      \
+    X(ENTER_MENU, MUSIC, "C:/repositories/ttterm/assets/audio/menu_enter.wav")
 
-#define IMAGE_ASSETS X(TEST_IMAGE, "C:/repositories/ttterm/assets/images/ttt_board.png")
+#define IMAGE_ASSETS                                                                                                   \
+    X(TEST_IMAGE, "C:/repositories/ttterm/assets/images/test.png")                                                     \
+    X(AI_MENU_EASY, "C:/repositories/ttterm/assets/images/ai_menu_easy.png")                                           \
+    X(AI_MENU_NORMAL, "C:/repositories/ttterm/assets/images/ai_menu_normal.png")                                       \
+    X(AI_MENU_HARD, "C:/repositories/ttterm/assets/images/ai_menu_hard.png")                                           \
+    X(AI_MENU_UNBEATABLE, "C:/repositories/ttterm/assets/images/ai_menu_unbeatable.png")                               \
+    X(SELECTOR_MENU, "C:/repositories/ttterm/assets/images/selector_menu.png")                                         \
+    X(TITLE, "C:/repositories/ttterm/assets/images/title.png")                                                         \
+    X(BORDER, "C:/repositories/ttterm/assets/images/border.png")
 
 constexpr const char *audioPaths[]{
 #define X(enum, type, pth) pth,
@@ -45,9 +56,9 @@ enum class AssetId : std::size_t {
 enum class AudioType : std::uint8_t { MUSIC, SFX };
 
 constexpr const AudioType audioTypes[]{
-    #define X(enum, type, pth) AudioType::type,
+#define X(enum, type, pth) AudioType::type,
     AUDIO_ASSETS
-    #undef X
+#undef X
 };
 
 struct AssetMetadata {
@@ -59,13 +70,11 @@ struct ImageMetadata : public AssetMetadata {
     std::size_t width{};
     std::uint8_t channels{};
     ~ImageMetadata() = default;
-    
 };
 
 struct AudioMetadata : public AssetMetadata {
     AudioType audioType;
     ~AudioMetadata() = default;
-    
 };
 
 using AssetMetadataVariant = std::variant<ImageMetadata, AudioMetadata>;

@@ -23,30 +23,20 @@ enum class InputKey {
     ARROW_LEFT,
     ARROW_RIGHT,
 };
-enum class InputAction {
-    NONE,
-    INTERACT,
-    SWITCH_FOCUS_LEFT,
-    SWITCH_FOCUS_RIGHT,
-    SWITCH_FOCUS_UP,
-    SWITCH_FOCUS_DOWN,
-};
+
 class Input {
   private:
     HANDLE stdinh{};
     DWORD consolePrevMode{};
     DWORD consoleCurrMode{};
-    InputKey pollInput();
-    InputAction mapKey(InputKey key);
-
   public:
-    void processInput(GameState& state);
-    // Input();
-    // Input(const Input &) = delete;
-    // Input &operator=(const Input &) = delete;
-    // Input(Input &&) = delete;
-    // Input &operator=(Input &&) = delete;
-    // ~Input();
+    InputKey pollInput();
+    Input();
+    Input(const Input &) = delete;
+    Input &operator=(const Input &) = delete;
+    Input(Input &&) = delete;
+    Input &operator=(Input &&) = delete;
+    ~Input();
 };
 
 } // namespace tct

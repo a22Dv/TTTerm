@@ -21,6 +21,8 @@ constexpr const std::size_t pxFrameSize{pxFrameHeight * pxFrameWidth};
 struct Vector2 {
     std::uint16_t x{};
     std::uint16_t y{};
+    Vector2() {};
+    Vector2(std::uint16_t x, std::uint16_t y) : x{x}, y{y} {};
 };
 
 struct RenderRequest {

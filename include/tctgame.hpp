@@ -4,13 +4,44 @@
 #include "tctdisplay.hpp"
 #include "tctinput.hpp"
 #include <variant>
+
+
 namespace tct {
 
 class Game;
 
-struct GameContext {};
+enum class SetDifficulty { AI_EASY, AI_NORMAL, AI_HARD, AI_UNBEATABLE };
 
-struct MenuContext {};
+struct Object {
+    AssetId id{};
+    Vector2 pos{};
+    Object() {};
+    Object(const AssetId id, const Vector2 pos) : id{id}, pos{pos} {};
+};
+
+struct MenuContext {
+    Display &dsp;
+    Audio &aud;
+    Input &ipt;
+    AssetRegistry &reg;
+    MenuContext(Display &dsp, Audio &aud, Input &ipt, AssetRegistry &reg) : dsp{dsp}, aud{aud}, ipt{ipt}, reg{reg} {};
+    SetDifficulty diff{};
+    std::vector<Object> objList{};
+    std::vector<Vector2> selectorPos{};
+    std::size_t selectorCPosIdx{};
+    std::size_t selectorObjIdx{};
+    bool playerFirst{};
+};
+
+struct GameContext {
+    Display &dsp;
+    Audio &aud;
+    Input &ipt;
+    AssetRegistry &reg;
+    SetDifficulty diff{};
+    bool playerFirst{};
+    GameContext(Display &dsp, Audio &aud, Input &ipt, AssetRegistry &reg) : dsp{dsp}, aud{aud}, ipt{ipt}, reg{reg} {};
+};
 
 using SceneContext = std::variant<GameContext, MenuContext>;
 
@@ -24,26 +55,26 @@ class Scene {
 
 class MenuScene : public Scene {
   private:
-    MenuContext context{};
+    MenuContext context;
     Game &gameInstance;
 
   public:
     void init() override;
     void update() override;
     void render() override;
-    MenuScene(Game &game) : gameInstance{game} {};
+    MenuScene(Game &game);
 };
 
 class GameScene : public Scene {
   private:
-    GameContext context{};
+    GameContext context;
     Game &gameInstance;
 
   public:
     void init() override;
     void update() override;
     void render() override;
-    GameScene(Game &game) : gameInstance{game} {};
+    GameScene(Game &game, const bool pFirst, const SetDifficulty diff);
 };
 
 class Game {
@@ -56,10 +87,10 @@ class Game {
     std::vector<std::unique_ptr<Scene>> sceneStack{};
 
   public:
-    Display& getDsp() { return displayModule; };
-    Audio& getAud() { return audioModule; };
-    Input& getInput() { return inputModule; };
-    AssetRegistry& getRegistry() { return registry; };
+    Display &getDsp() { return displayModule; };
+    Audio &getAud() { return audioModule; };
+    Input &getInput() { return inputModule; };
+    AssetRegistry &getRegistry() { return registry; };
     void popScene() { sceneStack.pop_back(); };
     void pushScene(std::unique_ptr<Scene> scene) { sceneStack.push_back(std::move(scene)); };
     void quit() { terminate = true; };

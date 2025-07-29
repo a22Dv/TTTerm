@@ -38,7 +38,7 @@ void Display::present() {
             const std::size_t pxFIdx = (chY * brailleChHeight * pxFrameWidth) + (chX * brailleChWidth);
             CHAR_INFO &dspChar{chFrameBuffer[chY * chFrameWidth + chX]};
             WCHAR &ch{dspChar.Char.UnicodeChar};
-            ch |= 0x2800;
+            ch = 0x2800;
             dspChar.Attributes = attr;
             for (std::size_t pxY = 0; pxY < brailleChHeight; ++pxY) {
                 for (std::size_t pxX = 0; pxX < brailleChWidth; ++pxX) {
@@ -47,9 +47,15 @@ void Display::present() {
                     ch |= (pxV << alignment[pxY * brailleChWidth + pxX]);
                 }
             }
+
         }
     }
     WriteConsoleOutputW(stdouth, chFrameBuffer.data(), bufferSize, cZero, &writeRegion);
+    memset(pxFrameBuffer.data(), 0, sizeof(pxFrameBuffer));
 }
 
 } // namespace tct
+
+/*
+    
+*/

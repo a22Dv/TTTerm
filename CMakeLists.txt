@@ -8,6 +8,7 @@ set (
     src/tctaudio.cpp
     src/tctdisplay.cpp
     src/tctgame.cpp
+    src/tctinput.cpp
 )
 add_executable(ttterm)
 target_sources(ttterm PRIVATE ${SRC_FILES})
