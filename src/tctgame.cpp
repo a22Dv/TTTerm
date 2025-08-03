@@ -27,6 +27,14 @@ void Game::run() {
         while (!terminate && sceneCount == sceneStack.size()) {
             cTime = std::chrono::steady_clock::now();
             sceneStack.back()->update();
+
+            /*
+                A recheck is needed to ensure init() is called if update() somehow loads
+                an entirely new scene.
+            */
+            if (terminate || sceneCount != sceneStack.size()) {
+                break;
+            }
             sceneStack.back()->render();
             std::chrono::milliseconds delta =
                 std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - cTime);
@@ -72,7 +80,7 @@ void MenuScene::update() {
     case InputKey::ARROW_UP: {
         context.selectorCPosIdx = (context.selectorCPosIdx + (availSelectorPos - 1)) % availSelectorPos;
         context.objList[context.selectorObjIdx].pos = context.selectorPos[context.selectorCPosIdx];
-        context.aud.playFile(context.reg.getAsset(AssetId::SELECT_MENU));
+        context.aud.playFile(context.reg.getAsset(AssetId::SELECT_MENU), 0.5f);
         return;
     }
     case InputKey::ARROW_DOWN: {
@@ -216,7 +224,7 @@ enum class BoardState : std::uint8_t { PL_VICTORY, PL_DEFEAT, TIE, UNDECIDABLE }
 std::int16_t minimax(
     std::array<CellStatus, boardSize> &boardReference, uint8_t currentDepth, std::uint8_t depthLimit, bool maximizer
 ) {
-
+    return 0;
 };
 
 /*
@@ -251,12 +259,14 @@ void hard(GameContext &ctx) {}
 void unbeatable(GameContext &ctx) {}
 
 void ai_move(GameContext &ctx) {
+    std::this_thread::sleep_for(std::chrono::milliseconds{500});
     switch (ctx.diff) {
-    case SetDifficulty::AI_EASY: easy(ctx);
-    case SetDifficulty::AI_NORMAL: normal(ctx);
-    case SetDifficulty::AI_HARD: hard(ctx);
-    case SetDifficulty::AI_UNBEATABLE: unbeatable(ctx);
+    case SetDifficulty::AI_EASY: easy(ctx); break;
+    case SetDifficulty::AI_NORMAL: normal(ctx); break;
+    case SetDifficulty::AI_HARD: hard(ctx); break;
+    case SetDifficulty::AI_UNBEATABLE: unbeatable(ctx); break;
     }
+    ctx.aud.playFile(ctx.reg.getAsset(AssetId::ENTER_MENU));
     ctx.turnCount++;
     ctx.playerTurn = true;
 }
@@ -330,7 +340,7 @@ void GameScene::update() {
         case InputKey::NONE: break;
         }
         if (input != InputKey::NONE && input != InputKey::ENTER) {
-            context.aud.playFile(context.reg.getAsset(AssetId::SELECT_MENU));
+            context.aud.playFile(context.reg.getAsset(AssetId::SELECT_MENU), 0.5f);
         }
         Object &selector = context.objList[context.selectorObjIdx];
         selector.id = context.selectorAssetsFDepth[context.selectorCDepth];
