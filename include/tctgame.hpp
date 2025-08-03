@@ -3,15 +3,19 @@
 #include "tctaudio.hpp"
 #include "tctdisplay.hpp"
 #include "tctinput.hpp"
+#include <cstdint>
 #include <variant>
 
 
 namespace tct {
 
+constexpr const std::size_t boardSideLength = 3;
+constexpr const std::size_t boardSize = boardSideLength * boardSideLength;
+
 class Game;
 
-enum class SetDifficulty { AI_EASY, AI_NORMAL, AI_HARD, AI_UNBEATABLE };
-
+enum class SetDifficulty : std::uint8_t { AI_EASY, AI_NORMAL, AI_HARD, AI_UNBEATABLE };
+enum class CellStatus : std::uint8_t { O, X, EMPTY };
 struct Object {
     AssetId id{};
     Vector2 pos{};
@@ -38,9 +42,25 @@ struct GameContext {
     Audio &aud;
     Input &ipt;
     AssetRegistry &reg;
-    SetDifficulty diff{};
+
     bool playerFirst{};
+    bool playerTurn{};
+    bool gameEnd{};
+
+    SetDifficulty diff{};
+    std::array<CellStatus, boardSize> board{};
+    std::vector<Object> objList{};
+    std::uint8_t selectorRow{0};
+    std::uint8_t selectorCDepth{0};
+    std::vector<std::uint16_t> selectorYPos{};
+    std::vector<std::uint16_t> selectorXPosD{}; // X-position based on depth.
+    std::vector<AssetId> selectorAssetsFDepth{};
+    std::size_t selectorObjIdx{};
+    std::size_t labelObjIdx{};
+    
     GameContext(Display &dsp, Audio &aud, Input &ipt, AssetRegistry &reg) : dsp{dsp}, aud{aud}, ipt{ipt}, reg{reg} {};
+    std::size_t turnCount{};
+    
 };
 
 using SceneContext = std::variant<GameContext, MenuContext>;
