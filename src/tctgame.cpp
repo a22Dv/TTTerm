@@ -5,10 +5,13 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
+#include <functional>
 #include <random>
 #include <thread>
 
 namespace tct {
+
+/* AI runs before render. Fix call. */
 
 void Game::run() {
     // Starting scene.
@@ -18,16 +21,19 @@ void Game::run() {
     std::chrono::milliseconds threshold{1};
     std::chrono::milliseconds frameInterval{33};
     while (!terminate) {
-        // Now obviously this isn't how it should work. But its because this game is just
-        // the menu and the game itself that it's fine if I re-init every single time.
+        /* Now obviously this isn't how it should work. But its because this game is just
+        the menu and the game itself that it's fine if I re-init every single time. */
         if (sceneCount != sceneStack.size()) {
             sceneStack.back()->init();
             sceneCount = sceneStack.size();
         }
+        // Initial render call to prevent a stale frame if update() decides to sleep.
+        sceneStack.back()->render();
         while (!terminate && sceneCount == sceneStack.size()) {
             cTime = std::chrono::steady_clock::now();
+            
+           
             sceneStack.back()->update();
-
             /*
                 A recheck is needed to ensure init() is called if update() somehow loads
                 an entirely new scene.
@@ -194,82 +200,7 @@ void executeTurn(Vector2 pos, GameContext &ctx) {
     ctx.selectorRow = 0;
 }
 
-void easy(GameContext &ctx) {
-    static std::random_device rd{};
-    static std::mt19937 mersenne{rd()};
-    static std::uniform_int_distribution<std::uint16_t> dist{0, 8};
-    bool moveSpent{false};
-    std::size_t lastValid{};
-    for (std::size_t i = 0; i < boardSize; ++i) {
-        CellStatus &cell = ctx.board[i];
-        if (cell != CellStatus::EMPTY) {
-            continue;
-        }
-        if (dist(mersenne) == 0) {
-            ctx.turnCount & 1 ? cell = CellStatus::O : cell = CellStatus::X;
-            moveSpent = true;
-        }
-        lastValid = i;
-        if (moveSpent) {
-            break;
-        }
-    }
-    if (!moveSpent) {
-        ctx.turnCount & 1 ? ctx.board[lastValid] = CellStatus::O : ctx.board[lastValid] = CellStatus::X;
-    }
-}
-
 enum class BoardState : std::uint8_t { PL_VICTORY, PL_DEFEAT, TIE, UNDECIDABLE };
-
-std::int16_t minimax(
-    std::array<CellStatus, boardSize> &boardReference, uint8_t currentDepth, std::uint8_t depthLimit, bool maximizer
-) {
-    return 0;
-};
-
-/*
-    These functions assume they will be called on a valid board. Calling it on a
-    full board or a game that has already concluded will either overwrite cells or
-    behave weirdly.
-*/
-
-void normal(GameContext &ctx) {
-    std::int16_t maxScore = INT16_MIN;
-    std::size_t bestMove = 0;
-    const CellStatus aiChar{ctx.turnCount & 1 ? CellStatus::O : CellStatus::X};
-    for (std::size_t i = 0; i < boardSize; ++i) {
-        CellStatus &cell = ctx.board[i];
-        if (cell != CellStatus::EMPTY) {
-            continue;
-        }
-        cell = aiChar;
-        std::int16_t score = minimax(ctx.board, 0, 1, false);
-        cell = CellStatus::EMPTY;
-        if (maxScore > score) {
-            continue;
-        }
-        maxScore = score;
-        bestMove = i;
-    }
-    ctx.board[bestMove] = aiChar;
-}
-
-void hard(GameContext &ctx) {}
-
-void unbeatable(GameContext &ctx) {}
-
-void ai_move(GameContext &ctx) {
-    std::this_thread::sleep_for(std::chrono::milliseconds{500});
-    switch (ctx.diff) {
-    case SetDifficulty::AI_EASY: easy(ctx); break;
-    case SetDifficulty::AI_NORMAL: normal(ctx); break;
-    case SetDifficulty::AI_HARD: hard(ctx); break;
-    case SetDifficulty::AI_UNBEATABLE: unbeatable(ctx); break;
-    }
-    ctx.aud.playFile(ctx.reg.getAsset(AssetId::ENTER_MENU));
-    ctx.turnCount++;
-    ctx.playerTurn = true;
-}
 
 BoardState evaluateBoard(std::array<CellStatus, boardSize> &board, bool plFirst) {
     bool hitBreak{};
@@ -301,6 +232,103 @@ BoardState evaluateBoard(std::array<CellStatus, boardSize> &board, bool plFirst)
         return BoardState::TIE;
     }
     return BoardState::UNDECIDABLE;
+}
+
+std::int16_t minimax(
+    std::array<CellStatus, boardSize> &boardReference, uint8_t currentDepth, std::uint8_t depthLimit, bool maximizer,
+    bool plFirst
+) {
+    switch (evaluateBoard(boardReference, plFirst)) {
+    case BoardState::PL_VICTORY: return -100 + currentDepth;
+    case BoardState::PL_DEFEAT: return 100 - currentDepth;
+    case BoardState::TIE: return 0;
+    default: break;
+    }
+    if (currentDepth == depthLimit) {
+        return 0;
+    }
+    std::int16_t moveScore{static_cast<std::int16_t>(maximizer ? INT16_MIN : INT16_MAX)};
+    std::function<std::int16_t(std::int16_t)> evaluator{[maximizer, &moveScore](std::int16_t val) {
+        return maximizer ? std::max(val, moveScore) : std::min(val, moveScore);
+    }};
+    const CellStatus moveChar{
+        plFirst ? (maximizer ? CellStatus::O : CellStatus::X) : (maximizer ? CellStatus::X : CellStatus::O)
+    };
+    BoardState state{BoardState::UNDECIDABLE};
+    for (CellStatus &cell : boardReference) {
+        if (cell != CellStatus::EMPTY) {
+            continue;
+        }
+        cell = moveChar;
+        std::int16_t score{minimax(boardReference, currentDepth + 1, depthLimit, !maximizer, plFirst)};
+        moveScore = evaluator(score);
+        cell = CellStatus::EMPTY;
+    }
+    return moveScore;
+};
+
+/*
+    This assumes it will be called on a valid board. Calling it on a
+    full board or a game that has already concluded will either overwrite cells or
+    behave weirdly.
+*/
+
+void ai_move(GameContext &ctx) {
+    std::this_thread::sleep_for(std::chrono::milliseconds{500});
+    if (ctx.diff == SetDifficulty::AI_EASY) {
+        static std::random_device rd{};
+        static std::mt19937 mersenne{rd()};
+        static std::uniform_int_distribution<std::uint16_t> dist{0, 8};
+        bool moveSpent{false};
+        std::size_t lastValid{};
+        for (std::size_t i = 0; i < boardSize; ++i) {
+            CellStatus &cell = ctx.board[i];
+            if (cell != CellStatus::EMPTY) {
+                continue;
+            }
+            if (dist(mersenne) == 0) {
+                ctx.turnCount & 1 ? cell = CellStatus::O : cell = CellStatus::X;
+                moveSpent = true;
+            }
+            lastValid = i;
+            if (moveSpent) {
+                break;
+            }
+        }
+        if (!moveSpent) {
+            ctx.turnCount & 1 ? ctx.board[lastValid] = CellStatus::O : ctx.board[lastValid] = CellStatus::X;
+        }
+    } else {
+        const std::uint8_t depthLimit{[ctx]() -> std::uint8_t {
+            switch (ctx.diff) {
+            case SetDifficulty::AI_NORMAL: return 1;
+            case SetDifficulty::AI_HARD: return 2;
+            case SetDifficulty::AI_UNBEATABLE: return UINT8_MAX;
+            default: return 0;
+            }
+        }()};
+        std::int16_t maxScore = INT16_MIN;
+        std::size_t bestMove = 0;
+        const CellStatus aiChar{ctx.turnCount & 1 ? CellStatus::O : CellStatus::X};
+        for (std::size_t i = 0; i < boardSize; ++i) {
+            CellStatus &cell = ctx.board[i];
+            if (cell != CellStatus::EMPTY) {
+                continue;
+            }
+            cell = aiChar;
+            std::int16_t score = minimax(ctx.board, 0, depthLimit, false, ctx.playerFirst);
+            cell = CellStatus::EMPTY;
+            if (maxScore > score) {
+                continue;
+            }
+            maxScore = score;
+            bestMove = i;
+        }
+        ctx.board[bestMove] = aiChar;
+    }
+    ctx.aud.playFile(ctx.reg.getAsset(AssetId::ENTER_MENU));
+    ctx.turnCount++;
+    ctx.playerTurn = true;
 }
 
 void isFinished(GameContext &context) {
