@@ -11,13 +11,12 @@
 #include <functional>
 
 namespace tct {
-namespace {
 
 // Forces the image to only have a Grayscale channel.
 constexpr const int stbGray = 1;
 
-void loadAudio(std::shared_ptr<Asset> assetPtr, const std::size_t audioIdx) {
-    const std::filesystem::path audioPath = std::filesystem::path{audioPaths[audioIdx]};
+void AssetRegistry::loadAudio(std::shared_ptr<Asset> assetPtr, const std::size_t audioIdx) {
+    const std::filesystem::path audioPath{rootAssetPath / std::filesystem::path{audioPaths[audioIdx]}};
     std::ifstream audioData{audioPath, std::ios::binary | std::ios::ate};
     const std::streamsize dataSize{audioData.tellg()};
     audioData.seekg(0);
@@ -28,12 +27,14 @@ void loadAudio(std::shared_ptr<Asset> assetPtr, const std::size_t audioIdx) {
     assetPtr->assetMetadata = mtdta;
 }
 
-void loadImage(std::shared_ptr<Asset> assetPtr, const std::size_t imgIdx) {
+void AssetRegistry::loadImage(std::shared_ptr<Asset> assetPtr, const std::size_t imgIdx) {
     int width{};
     int height{};
-    const char *imagePath{imagePaths[imgIdx]};
-    std::uint8_t *imgData{static_cast<std::uint8_t *>(stbi_load(imagePath, &width, &height, nullptr, stbGray))};
-    check(imgData != nullptr, std::format("An error has occured when loading {}.", imagePath));
+    std::filesystem::path imagePath{rootAssetPath / imagePaths[imgIdx]};
+    std::uint8_t *imgData{static_cast<std::uint8_t *>(
+        stbi_load(reinterpret_cast<const char *>(imagePath.u8string().c_str()), &width, &height, nullptr, stbGray)
+    )};
+    check(imgData != nullptr, std::format("An error has occured when loading {}.", imagePath.string()));
     ImageMetadata mtdta{};
     mtdta.height = static_cast<std::size_t>(height);
     mtdta.width = static_cast<std::size_t>(width);
@@ -47,9 +48,7 @@ void loadImage(std::shared_ptr<Asset> assetPtr, const std::size_t imgIdx) {
 
 using LoadDispatchArray = std::array<std::function<void(std::shared_ptr<Asset>, const std::size_t)>, assetTypes>;
 
-} // namespace
-
-std::weak_ptr<Asset> AssetRegistry::getAsset(const AssetId assetId) const {
+std::weak_ptr<Asset> AssetRegistry::getAsset(const AssetId assetId) {
     const std::size_t assetIdx{static_cast<std::size_t>(assetId)};
     if (assets[assetIdx].get() == nullptr) {
         loadAsset(assetId);
@@ -57,13 +56,16 @@ std::weak_ptr<Asset> AssetRegistry::getAsset(const AssetId assetId) const {
     return static_cast<std::weak_ptr<Asset>>(assets[assetIdx]);
 }
 
-void AssetRegistry::loadAsset(const AssetId assetId) const {
+void AssetRegistry::loadAsset(const AssetId assetId) {
     const std::size_t assetIdx{static_cast<std::size_t>(assetId)};
-     std::shared_ptr<Asset> assetPtr = assets[assetIdx];
+    std::shared_ptr<Asset> assetPtr = assets[assetIdx];
     if (assetPtr != nullptr) {
         return; // Asset is already loaded.
     }
-    static const LoadDispatchArray dispatchTable{loadAudio, loadImage};
+    const LoadDispatchArray dispatchTable{
+        [this](std::shared_ptr<Asset> asset, const std::size_t index) { this->loadAudio(asset, index); },
+        [this](std::shared_ptr<Asset> asset, const std::size_t index) { this->loadImage(asset, index); }
+    };
     constexpr const std::array<std::size_t, assetTypes + 1> offsets{audioIdOffset, imageIdOffset, assetCount};
     assets[assetIdx] = std::make_shared<Asset>(Asset{});
     std::shared_ptr<Asset> setAssetPtr{assets[assetIdx]};
